@@ -1,0 +1,7 @@
+php bin/console server:run
+
+username : shashishishya
+username :shashikumarj
+
+password: Shashi2466#
+pasword : Shashikumar2466#
