@@ -11,3 +11,11 @@ acme_bundle_blog:
 app:
     resource: "@AppBundle/Controller/"
     type:     annotation
+
+blog_list:
+   path: /jkl
+   defaults: { _controller: AcmeAccountBundle:Blog:list }
+
+blog_show:
+   path: /jkl/show/{id}
+   defaults: { _controller: AcmeAccountBundle:Blog:show }

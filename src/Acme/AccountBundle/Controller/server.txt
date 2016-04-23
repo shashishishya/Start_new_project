@@ -1,0 +1,40 @@
+1 use Symfony\Component\HttpFoundation\Request;
+2
+3 public function indexAction(Request $request)
+
+4 {
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25 }
+$request->isXmlHttpRequest(); // is it an Ajax request?
+$request->getPreferredLanguage(array('en', 'fr'));
+// retrieve GET and POST variables respectively
+$request->query->get('page');
+$request->request->get('page');
+// retrieve SERVER variables
+$request->server->get('HTTP_HOST');
+// retrieves an instance of UploadedFile identified by foo
+$request->files->get('foo');
+// retrieve a COOKIE value
+$request->cookies->get('PHPSESSID');
+// retrieve an HTTP request header, with normalized, lowercase keys
+$request->headers->get('host');
+$request->headers->get('content_type');
