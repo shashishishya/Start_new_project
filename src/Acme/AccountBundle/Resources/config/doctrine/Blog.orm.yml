@@ -1,0 +1,39 @@
+Acme\AccountBundle\Entity\Blog:
+    type: entity
+    table: null
+    repositoryClass: Acme\AccountBundle\Repository\BlogRepository
+    id:
+        id:
+            type: integer
+            id: true
+            generator:
+                strategy: AUTO
+    fields:
+        title:
+            type: string
+            length: '100'
+            nullable: true
+        author:
+            type: string
+            length: '20'
+            nullable: true
+        blog:
+            type: string
+            length: '20'
+            nullable: true
+        image:
+            type: text
+            nullable: true
+        tags:
+            type: text
+            nullable: true
+        comments:
+            type: datetimetz
+            nullable: true
+        created:
+            type: datetimetz
+            nullable: true
+        updated:
+            type: datetimetz
+            nullable: true
+    lifecycleCallbacks: {  }

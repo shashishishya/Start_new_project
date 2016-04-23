@@ -1,3 +1,13 @@
+acme_account:
+    resource: "@AcmeAccountBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
+acme_bundle_blog:
+    resource: "@AcmeBundleBlogBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
 app:
     resource: "@AppBundle/Controller/"
     type:     annotation

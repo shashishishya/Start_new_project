@@ -1,0 +1,167 @@
+https://www.digitalocean.com/community/tutorials/how-to-use-symfony2-to-perform-crud-operations-on-a-vps-part-1
+
+
+
+How To Use Symfony2 To Perform CRUD Operations on a VPS (Part 1)
+Sep 3, 2013 PHP Frameworks
+About Symfony
+
+Symfony is an open source PHP web development framework - a set of tools and methodology to help you build great applications. Some of the traits of this framework are its speed, flexibility, scalability, and stability. You can use it for a full blown web application but also for smaller functionalities needed for your project.
+
+In the previous tutorial, we have seen how to install the Symfony2 Standard Distribution and configure it to work on your VPS. In this and the next tutorial, we will create a small Symfony application that performs some basic CRUD (create, read, update, delete) operations on our data model. This tutorial assumes you have followed the steps from the previous article and you are able to continue where it left off.
+
+The data we will work with are news pages. We will be creating an entity (servings as our data model for the news pages) and learn how to read and display it. In the next one, we will learn how to perform the other operations, namely to add, update and delete the news pages. But first, we’ll need to create a bundle.
+Bundles
+
+A bundle in Symfony is a directory where you keep all the files necessary for a specific functionality in your application. This includes PHP files, stylesheets, javascript files, etc. In our application we will create only one bundle that is responsible for everything that has to do with the news pages. If we wanted to also have a blog, we could create a specific bundle responsible for that.
+
+The cool thing about bundles is that they also act like plugins (even core Symfony functionality is arranged in bundles). This means you can create new bundles yourself that will hold all the code for a specific feature or you can register an external bundle created by someone else. So before starting to play with our data, let’s generate an empty bundle in the command line since the Symfony Standard Distribution provides this neat facility. This means you don’t need to create all the folders and manually register the bundle with Symfony - all this will be done automatically.
+
+So to generate automatically a bundle, navigate to the main folder of your application, in our case, Symfony:
+
+cd /var/www/Symfony
+
+Run the following command to generate a new bundle by the name, NewsBundle:
+
+php app/console generate:bundle --namespace=Foo/NewsBundle --format=yml
+
+Follow the instructions on the screen and accept the default options. This command will generate a bundle by the name NewsBundle that belongs to the vendor Foo. You can choose whatever vendor naming you want (this represents you basically) but you need to make sure the bundle name ends with the word Bundle. In addition, the command specifies the configuration format for the bundle to be in YAML files.
+
+In the background, the folder structure for your bundle is created (at src/Foo/NewsBundle) and the bundle is registered with the rest of the application.
+Entities
+
+If you followed all the steps in the previous tutorial, your database connection should already be configured. If not, you can edit the parameters.yml file:
+
+nano /var/www/Symfony/app/config/parameters.yml
+
+And there, you can specify your database information. If you already have a database created, you can skip the next step. However, you can let Symfony automatically create the database that matches the information in this file with the following command:
+
+php app/console doctrine:database:create
+
+Now, in order to work with our data model (news page) we will need to create something called an Entity. This is basically a PHP class that defines all the information about our news pages. Symfony has a nifty command line tool for this that we will use and another nice one for creating the actual database tables that match this data model.
+
+So run the following command from the command line for generating the entity called News:
+
+php app/console doctrine:generate:entity
+
+Follow the instructions on the screen. The first thing you’ll need to specify is the name, albeit the shortcut name. For us it will be FooNewsBundle:News (the entity name is the one following the colon but you need to specify also the bundle it belongs to). Next, for the configuration management go ahead and select yml.
+
+Following this, you’ll add the class properties (that will match the table columns) for our data model. Let’s add a title (string, 255), body (text) and created_date (datetime). Next, there is no need for a repository so select no and then confirm the generation. The entity is now created.
+
+If you are curious to see how it looks, you can explore the newly created entity class file:
+
+nano /var/www/Symfony/src/Foo/NewsBundle/Entity/News.php
+
+Next, let’s have Symfony generate the database table that will store our news pages based on this newly created entity. Run the following command:
+
+php app/console doctrine:schema:update --force
+
+This command will take the information from the entity and generate the table based on this. You should get a simple confirmation: "Database schema updated successfully! "1" queries were executed." Now if you look in the database, you should see a table called News with 4 columns (id, title, body and created_date) all of which matching a property in the News entity class.
+Reading Data
+
+Since our database is empty, let’s use phpmyadmin or the command line to insert 2 test rows that we can read using our new Symfony application. Later, we will see how to use the application to add new content but for now, you can run the following commands in the mysql terminal to add 2 rows:
+
+use symfony;
+INSERT INTO News (title,body,created_date)
+    VALUES ('News title 1', 'Some body text', NOW());
+INSERT INTO News (title,body,created_date)
+    VALUES ('News title 2', 'Another body text', NOW());
+
+Now that we have some dummy content, let’s create a route to map the user request for a particular news page to a Symfony Controller.
+
+The main route file in your application is found in the app/config folder but you can also define specific routing rules for your bundle in the routing.yml file located in the bundle folder structure:
+
+nano /var/www/Symfony/src/Foo/NewsBundle/Resources/config/routing.yml
+
+Let’s delete the rule that’s already there and add another one instead:
+
+foo_news_show:
+    pattern:  /news/{id}
+    defaults: { _controller: FooNewsBundle:Default:show }
+
+The name of this rule is foo_news_show and it will be triggered when the browser requests www.example.com/Symfony/web/app_dev.php/news/{id}, {id} being a wildcard for a dynamically passed ID of the requested news page. Under defaults, we specify which Controller and method to be called. In this case it will be the DefaultController found in the DefaultController.php file and the showAction method inside it (that we will now have to create).
+
+We specified here the DefaultController because its file is already there, automatically generated by Symfony when we created the bundle. So we might as well use it. What we have to do now is create the method that will use the News entity class and the Doctrine database library to request the news page and then pass it in a variable to a Twig template file. So let's edit the DefaultController.php file:
+
+nano /var/www/Symfony/src/Foo/NewsBundle/Controller/DefaultController.php
+
+In this file, you’ll see already the indexAction() method defined. Below it, let’s declare the showAction() method:
+
+public function showAction($id) {
+      $news = $this->getDoctrine()
+            ->getRepository('FooNewsBundle:News')
+            ->find($id);
+      if (!$news) {
+        throw $this->createNotFoundException('No news found by id ' . $id);
+      }
+    
+      $build['news_item'] = $news;
+      return $this->render('FooNewsBundle:Default:news_show.html.twig', $build);
+    }
+
+This function uses Doctrine to retrieve the news entity with the ID passed (throws an exception if no news is found) and passes the news object along to the news_show.html.twig template file that we have to create next. The code is pretty straightforward. So let’s do just that.
+
+Views are found in the bundle under the Resources/views folder inside another folder named after the Controller that uses them - in our case Default. So create there a new file called news_show.html.twig:
+
+nano /var/www/Symfony/src/Foo/NewsBundle/Resources/views/Default/news_show.html.twig
+
+And paste in the following template code:
+
+{{ news_item.Title }}
+{{ news_item.Body }}
+
+<h1>{{ news_item.Title }}</h1>
+{{ news_item.Body }}
+
+This is an html file with Twig templating language. We will not go into detail here about Twig in Symfony so feel free to read more about it here. Now if you point your browser to www.example.com/Symfony/web/app_dev.php/news/1 you should see the news with the ID 1.
+
+Let’s now create a listing of all the news pages by creating another routing rule and Controller method. Open the same routing.yml file you edited earlier:
+
+nano /var/www/Symfony/src/Foo/NewsBundle/Resources/config/routing.yml
+
+And add the following:
+
+foo_news_home:
+    pattern:  /news/
+    defaults: { _controller: FooNewsBundle:Default:index }
+
+This route will trigger the indexAction() method of the DefaultController so let’s go edit it (if you remember it is already in the Controller file so we just need to modify it):
+
+nano /var/www/Symfony/src/Foo/NewsBundle/Controller/DefaultController.php
+
+Remove the argument specified there by default ($name) and the code inside the method itself. Instead, paste the following:
+
+$news = $this->getDoctrine()
+            ->getRepository('FooNewsBundle:News')
+            ->findAll();
+      if (!$news) {
+        throw $this->createNotFoundException('No news found');
+      }
+    
+      $build['news'] = $news;
+      return $this->render('FooNewsBundle:Default:news_show_all.html.twig', $build);
+
+Similar to the method we created before, this one will find all the news in the table and pass them to the news_show_all.html.twig template file. So let’s create this file in the same folder as the one we created earlier:
+
+nano /var/www/Symfony/src/Foo/NewsBundle/Resources/views/Default/news_show_all.html.twig
+
+And iterate through the $news object array to display all the news titles:
+
+{% for new in news %}
+
+<h3>{{ new.Title }}</h3>
+
+{% endfor %}
+
+Now if you go to www.example.com/Symfony/web/app_dev.php/news/ you should see the 2 news titles we have added to the table manually. Let’s also use the Symfony routing system to add links around these titles that will lead to their respective pages we created earlier. So replace the following:
+
+<h3>{{ new.Title }}</h3>
+
+with this:
+
+<h3><a href="{{ path('foo_news_show', {'id':  new.Id  }) }}">{{ new.Title }}</a></h3>
+
+This is a handy way to generate links inside the Twig template. You basically specify which route to use and what should be the value of the wildcard the route is expecting - in this case the ID found in the news object. Now if you refresh the page, the titles turn into links to their respective pages.
+Conclusion
+
+In this tutorial, we’ve seen what Symfony bundles are and how to create them. We’ve also begun our small application that needs to interact with our news pages in the database. For this, we’ve defined an Entity class that matches the table structure and we've used Doctrine to access the information and populate the entity objects. In addition, we’ve also used the Symfony routing system to connect a browser request with 

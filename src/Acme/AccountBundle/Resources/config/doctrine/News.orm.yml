@@ -1,0 +1,25 @@
+Acme\AccountBundle\Entity\News:
+    type: entity
+    table: null
+    repositoryClass: Acme\AccountBundle\Repository\NewsRepository
+    id:
+        id:
+            type: integer
+            id: true
+            generator:
+                strategy: AUTO
+    fields:
+        array:
+            type: string
+            length: 255
+        title:
+            type: string
+            length: '255'
+        name:
+            type: string
+            length: '100'
+        phoneNumber:
+            type: integer
+            unique: true
+            column: phone_number
+    lifecycleCallbacks: {  }
