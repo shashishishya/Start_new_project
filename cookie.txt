@@ -1,0 +1,17 @@
+// use the get , post, all function  has() also one function
+
+use Symfony\Composnet\HttpFoundation\Respose;
+
+
+//create object for that
+
+$response = new Response();
+
+$response->setContent('html code');
+$response->setStatusCode(Response::HTTp_OK);
+$response->headers->set('Content-type','text-html');
+
+
+$response->send();
+
+// response and request are symfony componet
